@@ -1,24 +1,36 @@
-pipeline {  
+pipeline {
   agent { label 'spc' }
-  parameters {
-    choice(name: 'MAVEN_GOAL', choices: ['package', 'clean package'], description:'This is maven goal')
-  }  
   stages {
-    stage('git') {
-          steps {
-            git url: 'https://github.com/spring-projects/spring-petclinic.git', branch: 'main'
-          }
+    stage ('git') {
+           steps {
+                 git branch: 'main', url: "https://github.com/spring-projects/spring-petclinic.git"
+             }
     }
     stage('build') {
-       steps {
-        sh "mvn ${params.MAVEN_GOAL}"
-        junit testResults: '**/surefire-reports/*.xml'
-        archive '**/target/spring-petclinic-*.jar'
-       }
+      steps {
+        rtMavenDeployer (
+                    id: "SPC_DEPLOYER",
+                    serverId: "ahmedevopsapr24",
+                    releaseRepo: 'ahmedevops-libs-release-local',
+                    snapshotRepo: 'ahmedevops-libs-snapshot-local'
+                )
+        rtMavenRun (
+            tool: 'MAVEN_3.9.9',
+            pom: 'pom.xml',
+            goals: 'clean install',
+            deployerId: "SPC_DEPLOYER"
+        )
+        rtPublishBuildInfo (
+            serverId: "ahmedevopsapr24"
+        )
+    }
     } 
-    
-  }
-  
+  }  
 }
 
-  
+
+
+    
+
+
+        
